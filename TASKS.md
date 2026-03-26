@@ -13,6 +13,6 @@
 
 ## Task: Order Placement + Inventory Removal Demo (demo_order.py)
 
-1. [~] Add `place_order` and `remove_inventory` local step handlers to SchedulerService
-2. [ ] Create demo_order.py — starts Flask, registers workflow via API, triggers execution via API
-3. [ ] Show formatted step summary and execution logs
+1. [x] Add `place_order` and `remove_inventory` local step handlers to SchedulerService
+2. [x] Create demo_order.py — starts Flask, registers workflow via API, triggers execution via API
+3. [x] Show formatted step summary and execution logs

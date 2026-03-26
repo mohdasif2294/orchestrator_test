@@ -276,9 +276,56 @@ source .venv/bin/activate
 python demo_order.py
 ```
 
-Starts the Flask server on port 5001, registers a workflow via the REST API, and triggers it with `{"item": "widget", "quantity": 3, "unit_price": 9.99}`:
-- Step 1 (`place_order`): records order, returns `order_id` and `total`
-- Step 2 (`remove_inventory`): deducts quantity from stock using Step 1's output
+Spins up a Flask server on a free port with a temporary database, registers the workflow via the REST API, and triggers it with:
+
+```json
+{ "item": "laptop", "quantity": 3, "unit_price": 999.99 }
+```
+
+**Workflow DAG:**
+
+```
+place_order  ──→  remove_inventory
+```
+
+**Steps:**
+
+| # | step_key | action | depends_on | key output |
+|---|----------|--------|------------|------------|
+| 1 | `place_order` | Records order, computes total | — | `order_id`, `item`, `quantity`, `total` |
+| 2 | `remove_inventory` | Deducts quantity from stock | `place_order` | `quantity_removed`, `remaining_stock` |
+
+Step 2 receives `item` and `quantity` from Step 1's output via payload templates:
+- `{{steps.place_order.output.item}}`
+- `{{steps.place_order.output.quantity}}`
+
+**What it demonstrates:**
+- Workflow registration via `POST /workflows`
+- Execution trigger via `POST /executions`
+- Inter-step data passing through `payload_template` placeholders
+- Real HTTP API calls with `X-API-Key` auth
+- Formatted execution summary with step inputs, outputs, and filtered logs
+
+**Sample output:**
+
+```
+════════════════════════════════════════════════════════════════════════
+  ORDER PLACEMENT + INVENTORY REMOVAL — Execution Summary
+════════════════════════════════════════════════════════════════════════
+
+  Workflow   : order_inventory_demo  (v1)
+  Status     : COMPLETED
+
+  [1] ✓  place_order
+       Status  : completed
+       Input   : {"item": "laptop", "quantity": 3, "unit_price": 999.99}
+       Output  : {"order_id": "a1b2c3d4", "item": "laptop", "quantity": 3, "total": 2999.97}
+
+  [2] ✓  remove_inventory
+       Status  : completed
+       Input   : {"item": "laptop", "quantity": 3}
+       Output  : {"item": "laptop", "quantity_removed": 3, "remaining_stock": 97}
+```
 
 ---
 
